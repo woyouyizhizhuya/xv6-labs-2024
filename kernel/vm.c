@@ -488,9 +488,29 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 
 
 #ifdef LAB_PGTBL
+
+//参考freewalk实现
+void walkPrint(pagetable_t pagetable, int level, uint64 basep){
+  if (level < 0)
+    return ;
+  for (uint64 t1 = 0; t1 < 512; t1++){
+    pte_t* pte = &pagetable[t1];
+    if (!(*pte & PTE_V))
+      continue;
+    uint64 temp = basep + (t1 << PXSHIFT(level));
+    pagetable_t next_pgtbl = (pagetable_t)PTE2PA(*pte);
+    for (int i = level; i < 3; i++)
+      printf("..");
+    printf("%p pte %p pa %p\n", (char*)temp, pte, (char*)next_pgtbl);
+    walkPrint(next_pgtbl, level - 1, temp);
+  }
+}
+
 void
 vmprint(pagetable_t pagetable) {
   // your code here
+  printf("page table %p\n", pagetable);
+  walkPrint(pagetable, 2, 0);
 }
 #endif
 
